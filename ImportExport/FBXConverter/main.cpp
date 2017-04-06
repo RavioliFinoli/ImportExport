@@ -1,6 +1,6 @@
 #include "FBXImportExport.h"
 
 int main() {
-	FBXImportExport importexport;
+	FBXImportExport importer;
 	return 0;
 }
