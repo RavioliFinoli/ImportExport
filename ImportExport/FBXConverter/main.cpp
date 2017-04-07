@@ -14,7 +14,7 @@ void PrintVertex(Vertex vertex)
 
 int main() 
 {
-
+	
 	std::ofstream outFile("test3.G6", std::ios::binary);
 
 	Vertex vertices[3]
