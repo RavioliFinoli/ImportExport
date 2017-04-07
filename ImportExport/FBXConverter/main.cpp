@@ -1,4 +1,4 @@
-#include "FBXImportExport.h"
+#include <fbxsdk.h>
 #include <fstream>
 #include "MeshHeader.h"
 #include <iostream>
