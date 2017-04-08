@@ -3,6 +3,8 @@
 #include "MeshHeader.h"
 #include <iostream>
 #include <stdlib.h>
+#include "FBXImporter.h"
+
 #define out std::cout <<
 void PrintVertex(Vertex vertex)
 {
@@ -14,28 +16,38 @@ void PrintVertex(Vertex vertex)
 
 int main() 
 {
-	
-	std::ofstream outFile("test3.G6", std::ios::binary);
+	FBXImporter importer;
+	vector<Vertex> verts;
+	importer.Import("test.fbx", &verts);
 
-	Vertex vertices[3]
-	{
-		{ 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f },
-		{ 21.0f, 2.0f, 33.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f },
-		{ 1.0f, 2.0f, 3.0f, 20.0f, 0.0f, 1.0f, 31.0f, 0.0f }
-	};
-	outFile.write(reinterpret_cast<char*>(vertices), sizeof(Vertex) * 3);
-	outFile.close();
-	Vertex inVerts[3];
+	out verts.size() << std::endl << std::endl;
 
-	std::ifstream in("test3.G6", std::ios::binary);
-	in.read(reinterpret_cast<char*>(inVerts), sizeof(Vertex) * 3);
+	for (int i = 0; i < verts.size(); i++)
+		PrintVertex(verts[i]);
 
-	for (int i = 0; i < 3; i++)
-	{
-		std::cout << "Vertex " << i + 1 << std::endl;
-		out inVerts[i].posX << std::endl;
-	}
 	system("pause");
-	in.close();
+
+	//std::ofstream outFile("test3.G6", std::ios::binary);
+
+	//Vertex vertices[3]
+	//{
+	//	{ 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f },
+	//	{ 21.0f, 2.0f, 33.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f },
+	//	{ 1.0f, 2.0f, 3.0f, 20.0f, 0.0f, 1.0f, 31.0f, 0.0f }
+	//};
+	//outFile.write(reinterpret_cast<char*>(vertices), sizeof(Vertex) * 3);
+	//outFile.close();
+	//Vertex inVerts[3];
+
+	//std::ifstream in("test3.G6", std::ios::binary);
+	//in.read(reinterpret_cast<char*>(inVerts), sizeof(Vertex) * 3);
+
+	//for (int i = 0; i < 3; i++)
+	//{
+	//	std::cout << "Vertex " << i + 1 << std::endl;
+	//	PrintVertex(inVerts[i]);
+	//}
+	//system("pause");
+	//in.close();
 
 }
