@@ -17,7 +17,7 @@ FBXImporter::~FBXImporter()
 {
 }
 
-void FBXImporter::Import(const char * filename, vector<Vertex>* VertexArray)
+void FBXImporter::Import(const char * filename, sMesh* mesh)
 {
 	importer->Initialize(filename, -1, manager->GetIOSettings());
 	scene = FbxScene::Create(manager, "Scene");
@@ -58,45 +58,50 @@ void FBXImporter::Import(const char * filename, vector<Vertex>* VertexArray)
 					vertex.posY = (float)pVertices[iControlPointIndex].mData[1];
 					vertex.posZ = (float)pVertices[iControlPointIndex].mData[2];
 					
-					//junk
+					// TODO //
 					vertex.norX = vertex.norY = vertex.norZ = 0;
 					vertex.U = vertex.V = 0;
-					VertexArray->push_back(vertex);
+					//////////
+
+					mesh->verts.push_back(vertex);
 				}
 			}
 			
+			mesh->name = currentMesh->GetNameOnly();
+			mesh->header.meshNameLength = mesh->name.length();
+			
+			// TODO //
+			mesh->header.numberOfIndex = 0;
+			mesh->header.textureNameLength = 0;
+			mesh->header.numberOfVerts = mesh->verts.size();
+			//////////
 		}
 	}
 }
 
-void FBXImporter::ExportBinary(const char * outputFile, vector<Vertex>* vertices)
+void FBXImporter::ExportBinary(const char * outputFile, sMesh* mesh )
 {
-	MeshHeader header;
-	header.meshNameLength = 4;
-	header.numberOfIndex = 0;
-	header.numberOfVerts = vertices->size();
-	header.textureNameLength = 0;
-
 	std::ofstream file(outputFile, std::ios::binary);
-
 	assert(file.is_open());
-	file.write(reinterpret_cast<char*>(&header), sizeof(header));
-	file.write(reinterpret_cast<char*>(vertices->data()), sizeof(vertices[0]) * vertices->size());
+
+	file.write(reinterpret_cast<char*>(&mesh->header), sizeof(mesh->header));
+	file.write((char*)(mesh->name.data()), mesh->header.meshNameLength);
+	file.write(reinterpret_cast<char*>(mesh->verts.data()), sizeof(Vertex) * mesh->header.numberOfVerts);
 
 	file.close();
 }
 
-void FBXImporter::ImportBinary(const char * inputFile, vector<Vertex>* vertices)
+void FBXImporter::ImportBinary(const char * inputFile, sMesh* mesh)
 {
 	std::ifstream file(inputFile, std::ios::binary);
-	MeshHeader header;
+
 	assert(file.is_open());
-	file.read(reinterpret_cast<char*>(&header), sizeof(header));
+	file.read(reinterpret_cast<char*>(&mesh->header), sizeof(mesh->header));
+	file.read((char*)(mesh->name.data()), mesh->header.meshNameLength);
+	mesh->verts.clear();
+	mesh->verts.resize(mesh->header.numberOfVerts);
 
-	vertices->clear();
-	vertices->resize(header.numberOfVerts);
+	file.read(reinterpret_cast<char*>(mesh->verts.data()), sizeof(Vertex) * mesh->header.numberOfVerts);
 
-	file.read(reinterpret_cast<char*>(vertices->data()), sizeof(Vertex) * header.numberOfVerts);
-	int x = 0;
 	file.close();
 }
