@@ -12,6 +12,7 @@ public:
 	~FBXImporter();
 	void Import(const char * filename, vector<Vertex>* VertexArray);
 	void ExportBinary(const char * outputFile, vector<Vertex>* vertices);
+	void ImportBinary(const char * inputFile, vector<Vertex>* vertices);
 private:
 	FbxManager* manager;
 	FbxIOSettings* ios;
