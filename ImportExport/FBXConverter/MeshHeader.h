@@ -2,6 +2,11 @@
 #include <stdint.h>
 #include <d3d11.h>
 #include <DirectXMath.h>
+#include <vector>
+#include <string>
+using std::string;
+using std::vector;
+
 struct MeshHeader
 {
 	uint8_t meshNameLength;
@@ -23,4 +28,11 @@ struct Vertex
 	float norX, norY, norZ;
 	float U, V;
 	//other stuff?
+};
+
+struct sMesh
+{
+	MeshHeader header;
+	string name;
+	vector<Vertex> verts;
 };
