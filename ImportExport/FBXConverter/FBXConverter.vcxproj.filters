@@ -21,12 +21,18 @@
     <ClCompile Include="FBXImporter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="G6Import.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MeshHeader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="FBXImporter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="G6Import.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -153,10 +153,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="FBXImporter.cpp" />
+    <ClCompile Include="G6Import.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FBXImporter.h" />
+    <ClInclude Include="G6Import.h" />
     <ClInclude Include="MeshHeader.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
