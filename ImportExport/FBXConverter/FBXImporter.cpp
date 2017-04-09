@@ -71,9 +71,32 @@ void FBXImporter::Import(const char * filename, vector<Vertex>* VertexArray)
 
 void FBXImporter::ExportBinary(const char * outputFile, vector<Vertex>* vertices)
 {
+	MeshHeader header;
+	header.meshNameLength = 4;
+	header.numberOfIndex = 0;
+	header.numberOfVerts = vertices->size();
+	header.textureNameLength = 0;
+
 	std::ofstream file(outputFile, std::ios::binary);
 
-	file.write(reinterpret_cast<char*>(&vertices[0]), sizeof(Vertex) * vertices->size());
+	assert(file.is_open());
+	file.write(reinterpret_cast<char*>(&header), sizeof(header));
+	file.write(reinterpret_cast<char*>(vertices->data()), sizeof(vertices[0]) * vertices->size());
 
+	file.close();
+}
+
+void FBXImporter::ImportBinary(const char * inputFile, vector<Vertex>* vertices)
+{
+	std::ifstream file(inputFile, std::ios::binary);
+	MeshHeader header;
+	assert(file.is_open());
+	file.read(reinterpret_cast<char*>(&header), sizeof(header));
+
+	vertices->clear();
+	vertices->resize(header.numberOfVerts);
+
+	file.read(reinterpret_cast<char*>(vertices->data()), sizeof(Vertex) * header.numberOfVerts);
+	int x = 0;
 	file.close();
 }
