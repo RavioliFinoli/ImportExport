@@ -4,16 +4,29 @@
 #include <iostream>
 #include <stdlib.h>
 #include "FBXImporter.h"
+#include <string>
 
 #define out std::cout <<
 #define endline << std::endl
 #define pause system("pause")
-
+#define clear system("clear")
 void PrintVertex(Vertex vertex)
 {
 	out "Position: { " << vertex.posX << ", " << vertex.posY << ", " << vertex.posZ << "}" << std::endl;
 	out "Normal: { " << vertex.norX << ", " << vertex.norY << ", " << vertex.norZ << "}" << std::endl;
 	out "UV: { " << vertex.U << ", " << vertex.V << "}" << std::endl;
+}
+
+void PrintMesh(const sMesh& mesh)
+{
+	out "//////////////\nHEADER//////////////" endline;
+	out "Name: " << mesh.name endline;
+	out "# of V: " << mesh.header.numberOfVerts endline;
+
+	for (auto& v : mesh.verts)
+		PrintVertex(v);
+
+
 }
 
 int main() 
@@ -23,25 +36,22 @@ int main()
 	//////////////////////////////////////////////////////
 
 	FBXImporter importer;
-	vector<Vertex> verts;
-	importer.Import("test.fbx", &verts);
+	sMesh mesh;
+	importer.Import("test.fbx", &mesh);
 
-	out verts.size() endline;
-
-	for (int i = 0; i < verts.size(); i++)
-		PrintVertex(verts[i]);
+	PrintMesh(mesh);
 
 	pause;
+	clear;
 
-	importer.ExportBinary("ExpImpTest.G6", &verts);
+	importer.ExportBinary("ExpImpTest.G6", &mesh);
 
 	vector<Vertex> newVerts;
 	newVerts.resize(1);
 
-	importer.ImportBinary("ExpImpTest.G6", &newVerts);
+	importer.ImportBinary("ExpImpTest.G6", &mesh);
 
-	for (int i = 0; i < verts.size(); i++)
-		PrintVertex(newVerts[i]);
+	PrintMesh(mesh);
 
 	pause;
 
