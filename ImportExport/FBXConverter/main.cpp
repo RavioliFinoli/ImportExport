@@ -14,7 +14,6 @@ void PrintVertex(Vertex vertex)
 	out "Position: { " << vertex.posX << ", " << vertex.posY << ", " << vertex.posZ << "}" << std::endl;
 	out "Normal: { " << vertex.norX << ", " << vertex.norY << ", " << vertex.norZ << "}" << std::endl;
 	out "UV: { " << vertex.U << ", " << vertex.V << "}" << std::endl;
-
 }
 
 int main() 
@@ -34,6 +33,17 @@ int main()
 
 	pause;
 
+	importer.ExportBinary("ExpImpTest.G6", &verts);
+
+	vector<Vertex> newVerts;
+	newVerts.resize(1);
+
+	importer.ImportBinary("ExpImpTest.G6", &newVerts);
+
+	for (int i = 0; i < verts.size(); i++)
+		PrintVertex(newVerts[i]);
+
+	pause;
 
 	//////////////////////////////////////////////////////
 	//// BINARY INPUT OUTPUT TEST BELOW //////////////////
