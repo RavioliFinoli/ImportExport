@@ -1,7 +1,7 @@
 #include "FBXImporter.h"
 #include <assert.h>
 #include "MeshHeader.h"
-
+#include <fstream>
 FBXImporter::FBXImporter()
 {
 	manager = FbxManager::Create();
@@ -67,4 +67,13 @@ void FBXImporter::Import(const char * filename, vector<Vertex>* VertexArray)
 			
 		}
 	}
+}
+
+void FBXImporter::ExportBinary(const char * outputFile, vector<Vertex>* vertices)
+{
+	std::ofstream file(outputFile, std::ios::binary);
+
+	file.write(reinterpret_cast<char*>(&vertices[0]), sizeof(Vertex) * vertices->size());
+
+	file.close();
 }
