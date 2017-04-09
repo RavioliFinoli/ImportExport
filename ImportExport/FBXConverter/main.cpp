@@ -6,6 +6,9 @@
 #include "FBXImporter.h"
 
 #define out std::cout <<
+#define endline << std::endl
+#define pause system("pause")
+
 void PrintVertex(Vertex vertex)
 {
 	out "Position: { " << vertex.posX << ", " << vertex.posY << ", " << vertex.posZ << "}" << std::endl;
@@ -16,16 +19,26 @@ void PrintVertex(Vertex vertex)
 
 int main() 
 {
+	//////////////////////////////////////////////////////
+	//// FBXImporter TEST ////////////////////////////////
+	//////////////////////////////////////////////////////
+
 	FBXImporter importer;
 	vector<Vertex> verts;
 	importer.Import("test.fbx", &verts);
 
-	out verts.size() << std::endl << std::endl;
+	out verts.size() endline;
 
 	for (int i = 0; i < verts.size(); i++)
 		PrintVertex(verts[i]);
 
-	system("pause");
+	pause;
+
+
+	//////////////////////////////////////////////////////
+	//// BINARY INPUT OUTPUT TEST BELOW //////////////////
+	//////////////////////////////////////////////////////
+
 
 	//std::ofstream outFile("test3.G6", std::ios::binary);
 
