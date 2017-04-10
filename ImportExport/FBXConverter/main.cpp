@@ -54,7 +54,7 @@ int main()
 
 	//PrintMesh(mesh);
 	sMesh mesh;
-	G6Import::ImportMesh("ExpImpTest.G6", &mesh);
+	G6Import::ImportStaticMesh("ExpImpTest.G6", &mesh);
 	PrintMesh(mesh);
 
 	pause;

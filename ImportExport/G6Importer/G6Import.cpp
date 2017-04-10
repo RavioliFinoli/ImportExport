@@ -1,6 +1,6 @@
 #include "G6Import.h"
 
-bool G6Import::ImportMesh(const char * filename, sMesh * outMesh)
+bool G6Import::ImportStaticMesh(const char * filename, sMesh * outMesh)
 {
 	std::ifstream file(filename, std::ios::binary);
 
