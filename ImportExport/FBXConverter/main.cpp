@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include "FBXImporter.h"
 #include <string>
+#include "G6Import.h"
 
 #define out std::cout <<
 #define endline << std::endl
@@ -35,22 +36,25 @@ int main()
 	//// FBXImporter TEST ////////////////////////////////
 	//////////////////////////////////////////////////////
 
-	FBXImporter importer;
+	//FBXImporter importer;
+	//sMesh mesh;
+	//importer.Import("test.fbx", &mesh);
+
+	//PrintMesh(mesh);
+
+	//pause;
+	//clear;
+
+	//importer.ExportBinary("ExpImpTest.G6", &mesh);
+
+	//vector<Vertex> newVerts;
+	//newVerts.resize(1);
+
+	//importer.ImportBinary("ExpImpTest.G6", &mesh);
+
+	//PrintMesh(mesh);
 	sMesh mesh;
-	importer.Import("test.fbx", &mesh);
-
-	PrintMesh(mesh);
-
-	pause;
-	clear;
-
-	importer.ExportBinary("ExpImpTest.G6", &mesh);
-
-	vector<Vertex> newVerts;
-	newVerts.resize(1);
-
-	importer.ImportBinary("ExpImpTest.G6", &mesh);
-
+	G6Import::ImportMesh("ExpImpTest.G6", &mesh);
 	PrintMesh(mesh);
 
 	pause;
