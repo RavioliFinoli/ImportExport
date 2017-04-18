@@ -18,15 +18,30 @@ struct MeshHeader
 	uint32_t numberOfIndex;
 	//index
 
-	uint8_t textureNameLength;
-	//tex name (texture.png)
+	uint32_t numberOfUVSets;
+	//index
+};
+
+struct UVSet
+{
+	int id;
+	int name_length;
+	string name;
+};
+
+struct UV {
+	int uvset_id;
+	float U, V;
 };
 
 struct Vertex
 {
 	float posX, posY, posZ;
 	float norX, norY, norZ;
-	float U, V;
+
+	vector<UV> uvs;
+	int numberOfUVs;
+	
 	//other stuff?
 };
 
@@ -35,4 +50,8 @@ struct sMesh
 	MeshHeader header;
 	string name;
 	vector<Vertex> verts;
+	vector<UVSet> uvsets;
+	vector<int> indices;
+	bool is_skinned;
+	uint8_t mat_id;
 };

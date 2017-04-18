@@ -11,11 +11,20 @@
 #define endline << std::endl
 #define pause system("pause")
 #define clear system("clear")
+
+void PrintUV(UV uv) {
+	out "UV: { " << uv.U << ", " << uv.V << "}" << std::endl;
+}
+
 void PrintVertex(Vertex vertex)
 {
 	out "Position: { " << vertex.posX << ", " << vertex.posY << ", " << vertex.posZ << "}" << std::endl;
 	out "Normal: { " << vertex.norX << ", " << vertex.norY << ", " << vertex.norZ << "}" << std::endl;
-	out "UV: { " << vertex.U << ", " << vertex.V << "}" << std::endl;
+	for (int i = 0; i < vertex.uvs.size(); i++) {
+		PrintUV(vertex.uvs[i]);
+	}
+	out "--------------------" << std::endl;
+	//out "UV: { " << vertex.U << ", " << vertex.V << "}" << std::endl;
 }
 
 void PrintMesh(const sMesh& mesh)
@@ -36,16 +45,23 @@ int main()
 	//// FBXImporter TEST ////////////////////////////////
 	//////////////////////////////////////////////////////
 
-	//FBXImporter importer;
-	//sMesh mesh;
-	//importer.Import("test.fbx", &mesh);
+	FBXImporter importer;
+	sMesh mesh;
+	vector<sMaterial*> meshMaterials;
 
-	//PrintMesh(mesh);
+	importer.Import("tower.fbx", &mesh, meshMaterials);
+	PrintMesh(mesh);
 
 	//pause;
 	//clear;
 
 	//importer.ExportBinary("ExpImpTest.G6", &mesh);
+	importer.ExportBinary("tower.G6", &mesh, meshMaterials);
+
+	G6Import g6importer;
+	sMesh* tmp_mesh = new sMesh();
+	vector<sMaterial*> tmpMaterials;
+	g6importer.ImportStaticMesh("tower.G6", tmp_mesh, tmpMaterials);
 
 	//vector<Vertex> newVerts;
 	//newVerts.resize(1);
@@ -53,9 +69,11 @@ int main()
 	//importer.ImportBinary("ExpImpTest.G6", &mesh);
 
 	//PrintMesh(mesh);
+	/*
 	sMesh mesh;
 	G6Import::ImportStaticMesh("ExpImpTest.G6", &mesh);
 	PrintMesh(mesh);
+	*/
 
 	pause;
 

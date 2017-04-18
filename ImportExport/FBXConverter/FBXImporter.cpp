@@ -17,7 +17,7 @@ FBXImporter::~FBXImporter()
 {
 }
 
-void FBXImporter::Import(const char * filename, sMesh* mesh)
+void FBXImporter::Import(const char * filename, sMesh* mesh, vector<sMaterial*>& outMaterials)
 {
 	importer->Initialize(filename, -1, manager->GetIOSettings());
 	scene = FbxScene::Create(manager, "Scene");
@@ -39,10 +39,29 @@ void FBXImporter::Import(const char * filename, sMesh* mesh)
 			FbxNodeAttribute::EType AttributeType = pCurrentNode->GetNodeAttribute()->GetAttributeType();
 			if (AttributeType != FbxNodeAttribute::eMesh) continue;
 
-			
-
 			FbxMesh* currentMesh = (FbxMesh*)pCurrentNode->GetNodeAttribute();
+			
+		
+
+			if (!currentMesh) continue; //Just in case
+
 			FbxVector4* pVertices = currentMesh->GetControlPoints();
+
+
+			//Export UVs
+			FbxStringList uvs;
+			currentMesh->GetUVSetNames(uvs);
+			mesh->header.numberOfUVSets = 0;
+			for (int i = 0; i < uvs.GetCount(); i++) {
+				mesh->header.numberOfUVSets++;
+
+				UVSet uvset;
+				uvset.name = uvs.GetStringAt(0);
+				uvset.name_length = uvset.name.length();
+				uvset.id = i;
+
+				mesh->uvsets.push_back(uvset);
+			}
 
 			for (int j = 0; j < currentMesh->GetPolygonCount(); j++)
 			{
@@ -52,17 +71,45 @@ void FBXImporter::Import(const char * filename, sMesh* mesh)
 				for (int k = 0; k < vertCount; k++)
 				{
 					int iControlPointIndex = currentMesh->GetPolygonVertex(j, k);
-
+					
+					//Export vertices
 					Vertex vertex;
 					vertex.posX = (float)pVertices[iControlPointIndex].mData[0];
 					vertex.posY = (float)pVertices[iControlPointIndex].mData[1];
 					vertex.posZ = (float)pVertices[iControlPointIndex].mData[2];
 					
-					// TODO //
-					vertex.norX = vertex.norY = vertex.norZ = 0;
-					vertex.U = vertex.V = 0;
-					//////////
+					//Export normals
+					FbxVector4 normal;
+					currentMesh->GetPolygonVertexNormal(j, k, normal);
+					vertex.norX = normal[0];
+					vertex.norY = normal[1];
+					vertex.norZ = normal[2];
 
+
+					//Export UVs
+					FbxStringList uvs;
+					currentMesh->GetUVSetNames(uvs);
+
+					for (int u = 0; u < uvs.GetCount(); u++) {
+
+						FbxVector2 uv_in;
+						const char* uvset_name = uvs.GetStringAt(0);
+						bool has_uvs;
+
+						bool uvmapped = currentMesh->GetPolygonVertexUV(j, k, mesh->uvsets[u].name.data(), uv_in, has_uvs);
+
+						if (uvmapped) {
+							vertex.numberOfUVs++;
+							UV uv_out;
+							uv_out.uvset_id = mesh->uvsets[u].id;
+							uv_out.U = uv_in[0];
+							uv_out.V = uv_in[1];
+
+							vertex.uvs.push_back(uv_out);
+
+						}
+
+					}
 					mesh->verts.push_back(vertex);
 				}
 			}
@@ -72,21 +119,125 @@ void FBXImporter::Import(const char * filename, sMesh* mesh)
 			
 			// TODO //
 			mesh->header.numberOfIndex = 0;
-			mesh->header.textureNameLength = 0;
 			mesh->header.numberOfVerts = mesh->verts.size();
 			//////////
+
+
+			//Export materials
+
+			int matCount = pCurrentNode->GetMaterialCount();
+		
+			for (int matID = 0; matID < matCount; matID++) {
+				sMaterial* tmp_mat = new sMaterial();
+
+				FbxSurfaceMaterial* mat = (FbxSurfaceMaterial*)pCurrentNode->GetMaterial(0);
+				FbxProperty diffuse_property = mat->FindProperty(mat->sDiffuse);
+				
+				FbxObject* obj = diffuse_property.GetSrcObject();
+				FbxTexture* diffuse_tex = obj && obj->Is<FbxTexture>() ? (FbxTexture*)obj : 0;
+				FbxFileTexture* diffuse_tex_file = diffuse_tex && diffuse_tex->Is<FbxFileTexture>() ? (FbxFileTexture*)diffuse_tex : 0;
+				const char* file_path = diffuse_tex_file->GetFileName();
+				tmp_mat->diffuse_path = file_path;
+				tmp_mat->data.diffusePathLength = tmp_mat->diffuse_path.size();
+
+				
+				tmp_mat->name = std::string(mat->GetName());
+				tmp_mat->subheader.matNameLength = tmp_mat->name.length();
+
+				FbxSurfaceLambert* lambert_mat = mat && mat->Is<FbxSurfaceLambert>() ? (FbxSurfaceLambert*)mat : 0;
+				if (lambert_mat) {
+					FbxDouble3 diffuse = lambert_mat->Diffuse;
+					
+					//Pack colors
+					uint32_t diffuse_r = 255 * diffuse.mData[0];
+					uint32_t diffuse_g = 255 * diffuse.mData[1];
+					uint32_t diffuse_b = 255 * diffuse.mData[2];
+
+					tmp_mat->data.diffuse |= diffuse_r << 16;
+					tmp_mat->data.diffuse |= diffuse_g << 8;
+					tmp_mat->data.diffuse |= diffuse_b;
+				}
+
+				outMaterials.push_back(tmp_mat);
+			}
 		}
 	}
 }
 
-void FBXImporter::ExportBinary(const char * outputFile, sMesh* mesh )
+void FBXImporter::ExportBinary(const char * outputFile, sMesh* mesh , vector<sMaterial*>& outMaterials)
 {
 	std::ofstream file(outputFile, std::ios::binary);
 	assert(file.is_open());
 
+
+	//Write vertex data
+	//<MeshHeader meshNameLength=99, numberOfVerts=99, numberOfIndex=99>
+	//   <UVSet>
+	//      <name>
+	//   <UVSet>
+	//      <name>
+	//   <UVSet>
+	//   <Vertex>
+	//   <Vertex>
+	//   <UV>
+	//   <UV>
+	//   <UV>
+
 	file.write(reinterpret_cast<char*>(&mesh->header), sizeof(mesh->header));
-	file.write((char*)(mesh->name.data()), mesh->header.meshNameLength);
+	file.write((char*)(mesh->name.data()), sizeof(char)*mesh->header.meshNameLength);
+
+	//Export uvsets all at once
+	file.write(reinterpret_cast<char*>(mesh->uvsets.data()), sizeof(UVSet) * mesh->uvsets.size());
+	//Export uvsets names in the correct order
+	for (int i = 0; i < mesh->uvsets.size(); i++) {
+		file.write((char*)(mesh->uvsets[i].name.data()), mesh->uvsets[i].name_length);
+	}
+
+	//Export vertex data all at once
 	file.write(reinterpret_cast<char*>(mesh->verts.data()), sizeof(Vertex) * mesh->header.numberOfVerts);
+	//Export uv vertex data in the correct order
+	for (int i = 0; i < mesh->header.numberOfVerts; i++) {
+		for (int j = 0; j < mesh->verts[i].numberOfUVs; j++) {
+			file.write(reinterpret_cast<char*>(&mesh->verts[i].uvs[j]), sizeof(UV));
+		}
+	}
+
+	//Write material data
+	
+	//<MatHeader mat_count=4>
+	//   <MatSubHeader matNameLength=25>
+	//		<name> raw
+	//		<sMaterialData diffusePathLength=18>
+	//          <diffuse_path> raw
+	//   <MatSubHeader>
+	//   <MatSubHeader>
+	//   ...
+
+	MatHeader materials_info;
+	materials_info.mat_count = outMaterials.size();
+	
+	file.write(reinterpret_cast<char*>(&materials_info), sizeof(MatHeader));
+
+	
+	for (int matID = 0; matID < materials_info.mat_count; matID++) {
+		sMaterial* material = outMaterials[matID];
+		MatSubHeader subheader = material->subheader;
+		uint32_t name_length = subheader.matNameLength;
+
+		file.write(reinterpret_cast<char*>(&subheader), sizeof(MatSubHeader));
+		file.write((char*)(material->name.data()), subheader.matNameLength * sizeof(char));
+
+		sMaterialData* material_data = &material->data;
+		
+		file.write(reinterpret_cast<char*>(material_data), sizeof(sMaterialData));
+
+		//Write diffuse texture
+		if (material->data.diffusePathLength > 0)
+			file.write((char*)(material->diffuse_path.data()), material->data.diffusePathLength * sizeof(char));
+
+	}
+
+	
 
 	file.close();
 }

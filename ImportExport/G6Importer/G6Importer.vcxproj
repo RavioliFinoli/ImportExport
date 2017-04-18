@@ -139,6 +139,7 @@
   <ItemGroup>
     <ClInclude Include="..\FBXConverter\MeshHeader.h" />
     <ClInclude Include="G6Import.h" />
+    <ClInclude Include="MatHeader.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
