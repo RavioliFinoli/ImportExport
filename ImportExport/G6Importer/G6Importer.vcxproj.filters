@@ -21,10 +21,13 @@
     <ClInclude Include="G6Import.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\FBXConverter\MeshHeader.h">
+    <ClInclude Include="MatHeader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MatHeader.h">
+    <ClInclude Include="MeshHeader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HelperStructs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

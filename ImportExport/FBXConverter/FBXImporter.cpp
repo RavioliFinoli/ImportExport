@@ -1,6 +1,7 @@
 #include "FBXImporter.h"
 #include <assert.h>
 #include "MeshHeader.h"
+#include "HelperStructs.h"
 #include <fstream>
 FBXImporter::FBXImporter()
 {
@@ -14,6 +15,22 @@ FBXImporter::FBXImporter()
 
 FBXImporter::~FBXImporter()
 {
+}
+
+void FBXImporter::ProcessControlPoints(FbxNode* inNode)
+{
+	FbxMesh* currMesh = inNode->GetMesh();
+	unsigned int ctrlPointCount = currMesh->GetControlPointsCount();
+	for (unsigned int i = 0; i < ctrlPointCount; ++i)
+	{
+		CtrlPoint* currCtrlPoint = new CtrlPoint();
+		DirectX::XMFLOAT3 currPosition;
+		currPosition.x = static_cast<float>(currMesh->GetControlPointAt(i).mData[0]);
+		currPosition.y = static_cast<float>(currMesh->GetControlPointAt(i).mData[1]);
+		currPosition.z = static_cast<float>(currMesh->GetControlPointAt(i).mData[2]);
+		currCtrlPoint->mPosition = currPosition;
+		mControlPoints[i] = currCtrlPoint;
+	}
 }
 
 void FBXImporter::Import(const char * filename, sMesh* mesh, vector<sMaterial*>& outMaterials)
