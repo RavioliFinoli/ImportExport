@@ -9,7 +9,6 @@ FBXImporter::FBXImporter()
 	manager->SetIOSettings(ios);
 
 	importer = FbxImporter::Create(manager, "");
-	
 }
 
 
@@ -63,6 +62,52 @@ void FBXImporter::Import(const char * filename, sMesh* mesh, vector<sMaterial*>&
 				mesh->uvsets.push_back(uvset);
 			}
 
+			FbxDeformer *deformer = nullptr;
+
+			int deformer_count = currentMesh->GetDeformerCount();
+			for (int i = 0; i < deformer_count; i++) {
+				deformer = currentMesh->GetDeformer(i);
+				FbxDeformer::EDeformerType deformer_type = deformer->GetDeformerType();
+
+				if (deformer_type == FbxDeformer::eSkin) break;
+			}
+
+
+			FbxSkin *skin = deformer && deformer->Is<FbxSkin>() ? (FbxSkin*)deformer : 0;
+
+			if (skin) {
+				int n_of_clusters = skin->GetClusterCount();
+
+				for (int c = 0; c < n_of_clusters; c++) {
+					FbxCluster *cluster = skin->GetCluster(c);
+
+					FbxCluster::ELinkMode cluster_mode = cluster->GetLinkMode();
+
+					FbxAMatrix model_to_pose_mat;
+					model_to_pose_mat = cluster->GetTransformLinkMatrix(model_to_pose_mat);
+					FbxAMatrix model_to_pose_mat_inv = model_to_pose_mat.Inverse();
+
+
+					FbxAMatrix bone_init_pose;
+					bone_init_pose = cluster->GetTransformMatrix(bone_init_pose);
+
+					FbxAMatrix bind_pose_inv = model_to_pose_mat_inv * bone_init_pose;
+					FbxAMatrix bild_pose = bind_pose_inv.Inverse();
+					
+
+					int n_of_indices = cluster->GetControlPointIndicesCount();
+					int *indices = cluster->GetControlPointIndices();
+					double *weights = cluster->GetControlPointWeights();
+
+					for (int ind = 0; ind < n_of_indices; ind++) {
+						float weight = (float)weights[ind];
+
+					}
+
+				}
+			}
+
+
 			for (int j = 0; j < currentMesh->GetPolygonCount(); j++)
 			{
 				int vertCount = currentMesh->GetPolygonSize(j);
@@ -97,6 +142,7 @@ void FBXImporter::Import(const char * filename, sMesh* mesh, vector<sMaterial*>&
 						bool has_uvs;
 
 						bool uvmapped = currentMesh->GetPolygonVertexUV(j, k, mesh->uvsets[u].name.data(), uv_in, has_uvs);
+						
 
 						if (uvmapped) {
 							vertex.numberOfUVs++;
