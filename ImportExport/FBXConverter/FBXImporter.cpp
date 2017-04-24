@@ -3,6 +3,7 @@
 #include "MeshHeader.h"
 #include "HelperStructs.h"
 #include <fstream>
+
 FBXImporter::FBXImporter()
 {
 	manager = FbxManager::Create();
@@ -17,7 +18,7 @@ FBXImporter::~FBXImporter()
 {
 }
 
-void FBXImporter::ProcessControlPoints(FbxNode* inNode)
+void FBXImporter::ProcessControlPoints(FbxNode* inNode, std::unordered_map<unsigned int, CtrlPoint*> &mControlPoints)
 {
 	FbxMesh* currMesh = inNode->GetMesh();
 	unsigned int ctrlPointCount = currMesh->GetControlPointsCount();
@@ -33,6 +34,21 @@ void FBXImporter::ProcessControlPoints(FbxNode* inNode)
 	}
 }
 
+void DumpRecursive(FbxNode* current_node, std::vector<Joint> &joints, int current, int parent) {
+	if (current_node->GetNodeAttribute() && current_node->GetNodeAttribute()->GetAttributeType() && current_node->GetNodeAttribute()->GetAttributeType() == FbxNodeAttribute::eSkeleton) {
+		//Joint found
+		Joint j;
+		j.name = current_node->GetName();
+		j.parent_id = parent;
+	}
+
+	for (int b = 0; b < current_node->GetChildCount(); b++) {
+		FbxNode *child_node = current_node->GetChild(b);
+
+		DumpRecursive(child_node, joints, joints.size(), current);
+	}
+}
+
 void FBXImporter::Import(const char * filename, sMesh* mesh, vector<sMaterial*>& outMaterials)
 {
 	importer->Initialize(filename, -1, manager->GetIOSettings());
@@ -45,6 +61,10 @@ void FBXImporter::Import(const char * filename, sMesh* mesh, vector<sMaterial*>&
 
 	FbxNode* pFbxRootNode = scene->GetRootNode();
 
+	//Read bone hierarchy
+	std::vector<Joint> joints;
+	DumpRecursive(pFbxRootNode, joints, 0, -1);
+
 	if (pFbxRootNode)
 	{
 		for (int i = 0; i < pFbxRootNode->GetChildCount(); i++)
@@ -54,6 +74,9 @@ void FBXImporter::Import(const char * filename, sMesh* mesh, vector<sMaterial*>&
 
 			FbxNodeAttribute::EType AttributeType = pCurrentNode->GetNodeAttribute()->GetAttributeType();
 			if (AttributeType != FbxNodeAttribute::eMesh) continue;
+
+			std::unordered_map<unsigned int, CtrlPoint*> mControlPoints;
+			ProcessControlPoints(pCurrentNode, mControlPoints);
 
 			FbxMesh* currentMesh = (FbxMesh*)pCurrentNode->GetNodeAttribute();
 			
@@ -82,8 +105,8 @@ void FBXImporter::Import(const char * filename, sMesh* mesh, vector<sMaterial*>&
 			FbxDeformer *deformer = nullptr;
 
 			int deformer_count = currentMesh->GetDeformerCount();
-			for (int i = 0; i < deformer_count; i++) {
-				deformer = currentMesh->GetDeformer(i);
+			for (int d = 0; d < deformer_count; d++) {
+				deformer = currentMesh->GetDeformer(d);
 				FbxDeformer::EDeformerType deformer_type = deformer->GetDeformerType();
 
 				if (deformer_type == FbxDeformer::eSkin) break;
@@ -119,6 +142,13 @@ void FBXImporter::Import(const char * filename, sMesh* mesh, vector<sMaterial*>&
 					for (int ind = 0; ind < n_of_indices; ind++) {
 						float weight = (float)weights[ind];
 
+						CtrlPoint *ctrl = new CtrlPoint();
+						BlendingIndexWeightPair currBlendingIndexWeightPair;
+						//currBlendingIndexWeightPair.mBlendingIndex = currJointIndex;
+						//currBlendingIndexWeightPair.mBlendingWeight = currCluster->GetControlPointWeights()[i];
+
+						ctrl->mBlendingInfo.push_back(currBlendingIndexWeightPair);
+						mControlPoints[indices[ind]];
 					}
 
 				}
@@ -198,10 +228,13 @@ void FBXImporter::Import(const char * filename, sMesh* mesh, vector<sMaterial*>&
 				
 				FbxObject* obj = diffuse_property.GetSrcObject();
 				FbxTexture* diffuse_tex = obj && obj->Is<FbxTexture>() ? (FbxTexture*)obj : 0;
-				FbxFileTexture* diffuse_tex_file = diffuse_tex && diffuse_tex->Is<FbxFileTexture>() ? (FbxFileTexture*)diffuse_tex : 0;
-				const char* file_path = diffuse_tex_file->GetFileName();
-				tmp_mat->diffuse_path = file_path;
-				tmp_mat->data.diffusePathLength = tmp_mat->diffuse_path.size();
+
+				if (diffuse_tex != nullptr) {
+					FbxFileTexture* diffuse_tex_file = diffuse_tex && diffuse_tex->Is<FbxFileTexture>() ? (FbxFileTexture*)diffuse_tex : 0;
+					const char* file_path = diffuse_tex_file->GetFileName();
+					tmp_mat->diffuse_path = file_path;
+					tmp_mat->data.diffusePathLength = tmp_mat->diffuse_path.size();
+				}
 
 				
 				tmp_mat->name = std::string(mat->GetName());

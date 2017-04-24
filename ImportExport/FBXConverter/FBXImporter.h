@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include "MeshHeader.h"
 #include "MatHeader.h"
+#include "HelperStructs.h"
 using std::vector;
 using std::string;
 
@@ -17,8 +18,7 @@ public:
 	void ExportBinary(const char * outputFile, sMesh* mesh, vector<sMaterial*>& outMaterials);
 	void ImportBinary(const char * inputFile, sMesh* mesh);
 private:
-	void ProcessControlPoints(FbxNode* inNode);
-	std::unordered_map<unsigned int, CtrlPoint*> mControlPoints;
+	void ProcessControlPoints(FbxNode* inNode, std::unordered_map<unsigned int, CtrlPoint*> &mControlPoints);
 	FbxManager* manager;
 	FbxIOSettings* ios;
 	FbxImporter* importer;

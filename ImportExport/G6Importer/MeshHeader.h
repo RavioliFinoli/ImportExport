@@ -45,6 +45,11 @@ struct Vertex
 	//other stuff?
 };
 
+struct Joint {
+	int parent_id;
+	string name;
+};
+
 struct sMesh
 {
 	MeshHeader header;
